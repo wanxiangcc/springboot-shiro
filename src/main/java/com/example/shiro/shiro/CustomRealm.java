@@ -13,6 +13,8 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +23,8 @@ import java.util.Set;
 
 @Component
 public class CustomRealm extends AuthorizingRealm {
+    private final static Logger LOGGER = LoggerFactory.getLogger(CustomRealm.class);
+
     @Autowired
     private UserDao userDao;
 
@@ -55,8 +59,10 @@ public class CustomRealm extends AuthorizingRealm {
         UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
         String password = userDao.getPassword(token.getUsername());
         if (null == password) {
+            LOGGER.error(token.getUsername() + " 用户不存在");
             throw new AccountException("用户不存在");
         } else if (!password.equals(new String((char[]) token.getCredentials()))) {
+            LOGGER.error(token.getUsername() + " 密码不正确");
             throw new AccountException("密码不正确");
         }
         return new SimpleAuthenticationInfo(token.getPrincipal(), password, getName());
